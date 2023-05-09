@@ -1,127 +1,94 @@
 'use client';
 
-import { Note, Scale } from 'tonal';
-import { ReactNode, useEffect, useRef, useState } from 'react';
-import { cn } from '@/util/tailwind';
-import { motion, MotionConfig } from 'framer-motion';
-import { useTwelveTetAnimationControls } from '@/app/practice/hooks/useTwelveTetAnimationControls';
-import { useMIDI } from '@react-midi/hooks';
+import { useHydrateAtoms } from 'jotai/utils';
+import {
+  midiInputAtom,
+  octaveCountAtom,
+  StartNote,
+  startNoteAtom,
+} from '@/lib/atoms';
+import { OctaveCount } from '@/lib/consts';
+import { PracticeGame } from '@/app/practice/components/PracticeGame';
+import { WebMidi } from 'webmidi';
+import { useAtom } from 'jotai';
+import { useIsomorphicLayoutEffect } from 'react-use';
+import { useState } from 'react';
 
-const chromaticNotes = Scale.get(['c', 'chromatic']).notes;
+type PracticeProps = {
+  octaveCount: OctaveCount;
+  startNote: StartNote;
+};
 
-export function Practice() {
-  const { inputs, outputs } = useMIDI();
+export function Practice({ octaveCount, startNote }: PracticeProps) {
+  /**
+   * Atoms
+   */
 
-  console.log(inputs);
+  useHydrateAtoms([
+    [octaveCountAtom, octaveCount],
+    [startNoteAtom, startNote],
+  ]);
 
-  const gameLoopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const awaitingNoteRef = useRef<ReturnType<(typeof Note)['get']> | null>(null);
+  const [midiInput, setMidiInput] = useAtom(midiInputAtom);
 
-  const [nextNote, setNextNote] = useState<string>();
-  const [gameOver, setGameOver] = useState(false);
+  /**
+   * State
+   */
 
-  const noteControls = useTwelveTetAnimationControls();
-  const noteLabelControls = useTwelveTetAnimationControls();
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    const gameTimer = 100;
+  /**
+   * Effects
+   */
 
-    const handleGameLoop = async () => {
-      if (!awaitingNoteRef.current) {
-        const randomNoteIndex = Math.floor(
-          Math.random() * chromaticNotes.length
-        );
-        const randomNote = chromaticNotes[randomNoteIndex];
+  useIsomorphicLayoutEffect(() => {
+    const midiInputId = new URLSearchParams(window.location.search).get(
+      'device'
+    );
 
-        awaitingNoteRef.current = Note.get(randomNote);
-        setNextNote(randomNote);
+    if (midiInputId && WebMidi) {
+      const startMidi = async () => {
+        try {
+          await WebMidi.enable();
+          const input = WebMidi.getInputById(midiInputId);
 
-        await Promise.all([
-          noteControls[randomNoteIndex].start({
-            scaleY: 1.1,
-          }),
-          noteLabelControls[randomNoteIndex].start({
-            scaleY: 1.5,
-            scaleX: 1.75,
-            translateY: -15,
-            opacity: 1,
-          }),
-        ]);
+          if (input) {
+            setMidiInput(input);
+          } else {
+            setMidiInput(false);
+          }
+        } catch (error) {
+          if (error instanceof Error) {
+            setError(error.message || 'Unknown error');
+          }
 
-        await new Promise((resolve) => setTimeout(resolve, 400));
+          setMidiInput(false);
+        }
+      };
 
-        await Promise.all([
-          noteControls[randomNoteIndex].start({
-            scaleY: 1,
-          }),
-          noteLabelControls[randomNoteIndex].start({
-            scaleY: 1,
-            scaleX: 1,
-            translateY: 0,
-            opacity: 0,
-          }),
-        ]);
-      }
-
-      // console.log(awaitingNoteRef.current);
-
-      gameLoopTimerRef.current = setTimeout(handleGameLoop, gameTimer);
-    };
-
-    handleGameLoop();
-
-    return () => {
-      if (gameLoopTimerRef.current) {
-        clearTimeout(gameLoopTimerRef.current);
-      }
-    };
+      startMidi();
+    } else {
+      setMidiInput(false);
+    }
   }, []);
 
   /**
    * Render
    */
-  const pianoOutput: ReactNode[] = [];
-
-  for (const [index, note] of Object.entries(chromaticNotes)) {
-    const isFlat = note.includes('b');
-
-    pianoOutput.push(
-      <motion.div
-        key={note}
-        animate={noteControls[+index]}
-        className={cn([
-          'flex origin-top items-end justify-center border border-black pb-2 perspective-500',
-          !isFlat && 'h-96 w-20 bg-white text-white',
-          isFlat && 'z-20 -mx-7 h-52 w-14 bg-black text-black',
-        ])}
-      >
-        <motion.div
-          animate={noteLabelControls[+index]}
-          className={cn([
-            'h-10 w-10 rounded-full p-2 text-center font-bold opacity-0',
-            !isFlat && 'bg-gray-500',
-            isFlat && 'bg-gray-400',
-          ])}
-        >
-          {note}
-        </motion.div>
-      </motion.div>
-    );
-  }
 
   return (
-    <div className="mx-auto flex w-fit flex-col gap-8">
-      <div className="flex gap-2">
-        <div className="font-bold">Next Note: </div>
-        {!!nextNote && nextNote}
-        {!nextNote && 'N/A'}
-      </div>
-      <div className="perspective-500">
-        <div className="mx-auto flex w-fit origin-top perspective-500 -translate-z-20 rotate-x-12 perspective-origin-top ">
-          <MotionConfig transition={{ duration: 0.4 }}>
-            {pianoOutput}
-          </MotionConfig>
+    <div className="flex flex-col gap-8">
+      <div className="flex items-center justify-center border-b pb-4">
+        <div>
+          Practicing {octaveCount} octaves starting at {startNote.name}
         </div>
+      </div>
+      {midiInput && <PracticeGame />}
+
+      <div className="flex flex-col items-center gap-4">
+        {midiInput === null && <div>Loading MIDI device...</div>}
+        {midiInput === false && <div>No MIDI device available.</div>}
+        {!!error && <div>Error: {error}</div>}
       </div>
     </div>
   );
