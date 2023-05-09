@@ -10,7 +10,7 @@ import { Octave } from '@/app/practice/components/PracticeGame/Octave';
 import { useGenerateNotes } from '@/app/practice/hooks/useGenerateNotes';
 
 // For testing
-const easyMode = true;
+const easyMode = false;
 
 export function PracticeGame() {
   const canAcceptNote = useRef(true);
