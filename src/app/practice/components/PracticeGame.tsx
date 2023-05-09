@@ -56,7 +56,9 @@ export function PracticeGame() {
           const wasAwaitingNote = gameState.awaitingNote;
           const previousBestStreak = gameState.bestStreak;
 
-          const playedNoteName = Midi.midiToNoteName(e.note.number);
+          const playedNoteName = Midi.midiToNoteName(e.note.number, {
+            sharps: true,
+          });
           const playedNote = note(playedNoteName);
           const playedCorrectNote = wasAwaitingNote === playedNote.name;
 

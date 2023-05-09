@@ -3,6 +3,7 @@ lockfileVersion: 5.4
 specifiers:
   '@radix-ui/react-select': ^1.2.1
   '@radix-ui/react-slot': ^1.0.1
+  '@tonaljs/note': ^4.10.0
   '@types/node': 20.1.0
   '@types/react': 18.2.6
   '@types/react-dom': 18.2.4
@@ -33,6 +34,7 @@ specifiers:
 dependencies:
   '@radix-ui/react-select': 1.2.1_tqcjxml4rosq5qpg5cznikfcd4
   '@radix-ui/react-slot': 1.0.1_react@18.2.0
+  '@tonaljs/note': 4.10.0
   '@types/node': 20.1.0
   '@types/react': 18.2.6
   '@types/react-dom': 18.2.4

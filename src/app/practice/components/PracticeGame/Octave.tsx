@@ -42,7 +42,7 @@ export function Octave({ notes }: OctaveProps) {
           }),
         ]);
 
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 400));
 
         await Promise.all([
           noteControls[noteIndex].start({
@@ -87,7 +87,7 @@ export function Octave({ notes }: OctaveProps) {
   const pianoOutput: ReactNode[] = [];
 
   for (const [index, note] of Object.entries(notes)) {
-    const isFlat = note.includes('b');
+    const isSharp = note.includes('#');
 
     pianoOutput.push(
       <motion.div
@@ -97,14 +97,14 @@ export function Octave({ notes }: OctaveProps) {
           'relative origin-top border border-black perspective-500',
           (gameState.lastCorrectNote === note ||
             gameState.lastIncorrectNote === note) &&
-            !isFlat &&
+            !isSharp &&
             'z-20',
           (gameState.lastCorrectNote === note ||
             gameState.lastIncorrectNote === note) &&
-            isFlat &&
+            isSharp &&
             'z-40',
-          !isFlat && 'h-96 w-20 bg-white',
-          isFlat && 'z-30 -mx-7 h-52 w-14 bg-black',
+          !isSharp && 'h-96 w-20 bg-white',
+          isSharp && 'z-30 -mx-7 h-52 w-14 bg-black',
         ])}
       >
         <motion.div
@@ -120,8 +120,8 @@ export function Octave({ notes }: OctaveProps) {
           className={cn([
             'absolute bottom-2 left-1/2 flex items-center justify-center rounded-full p-2 opacity-0 shadow-sm drop-shadow-xl perspective-250 -translate-x-1/2 transform',
             'bg-green-400 text-center font-bold text-green-950',
-            !isFlat && 'h-16 w-16 text-xl',
-            isFlat && 'h-20 w-20 text-2xl',
+            !isSharp && 'h-16 w-16 text-xl',
+            isSharp && 'h-20 w-20 text-2xl',
           ])}
         >
           {note}
