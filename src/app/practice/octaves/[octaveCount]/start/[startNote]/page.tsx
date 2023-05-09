@@ -3,6 +3,10 @@ import { note } from 'tonal';
 import { OctaveCount, octaveCounts } from '@/lib/consts';
 import { Practice } from '@/app/practice/components/Practice';
 
+export const metadata = {
+  title: 'Piano Practice',
+};
+
 type PageParams = {
   params: {
     octaveCount: string;
