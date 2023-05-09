@@ -1,4 +1,5 @@
 import './globals.css';
+import { Analytics } from '@vercel/analytics/react';
 import { Inter } from 'next/font/google';
 import { cn } from '@/lib/utils';
 
@@ -32,6 +33,7 @@ export default function RootLayout({
             />
           </a>
         </footer>
+        <Analytics />
       </body>
     </html>
   );
