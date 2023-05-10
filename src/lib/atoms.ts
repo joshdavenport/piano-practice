@@ -1,7 +1,7 @@
 import { note } from 'tonal';
 import { Input } from 'webmidi';
 import { atom } from 'jotai';
-import { OctaveCount } from '@/lib/consts';
+import { OctaveCount, PracticeType } from '@/lib/consts';
 
 export const midiInputAtom = atom<Input | boolean | null>(null);
 
@@ -9,6 +9,8 @@ export const octaveCountAtom = atom<OctaveCount | null>(null);
 
 export type StartNote = ReturnType<typeof note>;
 export const startNoteAtom = atom<StartNote | null>(null);
+
+export const practiceTypeAtom = atom<PracticeType | null>(null);
 
 type GameState = {
   playedNotes: number;

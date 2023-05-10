@@ -34,7 +34,12 @@ export function PracticeGame() {
   const [gameState, setGameState] = useAtom(gameStateAtom);
 
   useEffect(() => {
-    if (typeof midiInput === 'object' && midiInput && notes) {
+    if (
+      typeof midiInput === 'object' &&
+      midiInput &&
+      notes &&
+      typeof octaveCount === 'number'
+    ) {
       setGameState((gameState) => {
         if (!gameState.awaitingNote) {
           gameState.awaitingNote = generateNewNoteTarget();
@@ -60,7 +65,15 @@ export function PracticeGame() {
             sharps: true,
           });
           const playedNote = note(playedNoteName);
-          const playedCorrectNote = wasAwaitingNote === playedNote.name;
+
+          let playedCorrectNote = false;
+          if (octaveCount === 0) {
+            playedCorrectNote =
+              wasAwaitingNote?.replace(/\d+/, '') ===
+              playedNoteName.replace(/\d+/, '');
+          } else {
+            playedCorrectNote = wasAwaitingNote === playedNote.name;
+          }
 
           newGameState.playedNotes++;
 
@@ -69,7 +82,10 @@ export function PracticeGame() {
           if (playedCorrectNote) {
             console.log(`✅ ${playedNoteName} is ${wasAwaitingNote}`);
             newGameState.streak++;
-            newGameState.lastCorrectNote = playedNoteName;
+            newGameState.lastCorrectNote =
+              octaveCount === 0
+                ? playedNoteName.replace(/\d+/, '4')
+                : playedNoteName;
             newGameState.lastIncorrectNote = null;
 
             if (newGameState.streak > previousBestStreak) {
@@ -79,7 +95,10 @@ export function PracticeGame() {
             console.log(`❌️ ${playedNoteName} is not ${wasAwaitingNote}`);
             newGameState.streak = 0;
             newGameState.lastCorrectNote = null;
-            newGameState.lastIncorrectNote = playedNoteName;
+            newGameState.lastIncorrectNote =
+              octaveCount === 0
+                ? playedNoteName.replace(/\d+/, '4')
+                : playedNoteName;
           }
 
           newGameState.awaitingNote = generateNewNoteTarget();
@@ -98,7 +117,7 @@ export function PracticeGame() {
         midiInput?.removeListener('noteon');
       }
     };
-  }, [midiInput, notes, setGameState, generateNewNoteTarget]);
+  }, [midiInput, notes, octaveCount, setGameState, generateNewNoteTarget]);
 
   return (
     <div>
@@ -114,7 +133,9 @@ export function PracticeGame() {
                 exit={{ opacity: 0, scale: 0.1 }}
                 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform"
               >
-                {gameState.awaitingNote}
+                {octaveCount === 0
+                  ? gameState.awaitingNote?.replace(/\d+/, '')
+                  : gameState.awaitingNote}
               </motion.span>
             </AnimatePresence>
           </div>
@@ -157,14 +178,19 @@ export function PracticeGame() {
         <div
           className={cn([
             'absolute left-0 flex w-fit origin-top perspective-500 rotate-x-12 perspective-origin-top-left',
-            octaveCount === 1 && 'translate-x-[150px] -translate-z-[80px]',
+            (octaveCount === 0 || octaveCount === 1) &&
+              'translate-x-[150px] -translate-z-[80px]',
             octaveCount === 2 && '-translate-x-[130px] -translate-z-[230px]',
             octaveCount === 3 && '-translate-x-[410px] -translate-z-[470px]',
           ])}
         >
           <MotionConfig transition={{ duration: 0.1 }}>
             {octaves.map((octaveNotes, octaveIndex) => (
-              <Octave key={octaveIndex} notes={octaveNotes} />
+              <Octave
+                key={octaveIndex}
+                notes={octaveNotes}
+                hideNumber={octaveCount === 0}
+              />
             ))}
           </MotionConfig>
         </div>

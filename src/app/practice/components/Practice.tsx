@@ -4,10 +4,11 @@ import { useHydrateAtoms } from 'jotai/utils';
 import {
   midiInputAtom,
   octaveCountAtom,
+  practiceTypeAtom,
   StartNote,
   startNoteAtom,
 } from '@/lib/atoms';
-import { OctaveCount } from '@/lib/consts';
+import { OctaveCount, octaveCounts, PracticeType } from '@/lib/consts';
 import { PracticeGame } from '@/app/practice/components/PracticeGame';
 import { WebMidi } from 'webmidi';
 import { useAtom } from 'jotai';
@@ -17,9 +18,14 @@ import { useState } from 'react';
 type PracticeProps = {
   octaveCount: OctaveCount;
   startNote: StartNote;
+  practiceType: PracticeType;
 };
 
-export function Practice({ octaveCount, startNote }: PracticeProps) {
+export function Practice({
+  octaveCount,
+  startNote,
+  practiceType,
+}: PracticeProps) {
   /**
    * Atoms
    */
@@ -27,6 +33,7 @@ export function Practice({ octaveCount, startNote }: PracticeProps) {
   useHydrateAtoms([
     [octaveCountAtom, octaveCount],
     [startNoteAtom, startNote],
+    [practiceTypeAtom, practiceType],
   ]);
 
   const [midiInput, setMidiInput] = useAtom(midiInputAtom);
@@ -80,7 +87,10 @@ export function Practice({ octaveCount, startNote }: PracticeProps) {
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-center border-b pb-4">
         <div>
-          Practicing {octaveCount} octaves starting at {startNote.name}
+          Practicing {octaveCount === 0 ? 'any' : octaveCount} octave
+          {octaveCount > 1 && 's'} starting at{' '}
+          {octaveCount === 0 ? 'N/A' : startNote.name} (
+          {practiceType.replace('_', ' ')})
         </div>
       </div>
       {midiInput && <PracticeGame />}

@@ -1,13 +1,14 @@
 import { useMemo } from 'react';
 import { note, Scale } from 'tonal';
 import { fromFreqSharps } from '@tonaljs/note';
-import { octaveCountAtom, startNoteAtom } from '@/lib/atoms';
+import { octaveCountAtom, practiceTypeAtom, startNoteAtom } from '@/lib/atoms';
 import { useAtomValue } from 'jotai';
 import { OctaveCount } from '@/lib/consts';
 
 export function useGenerateNotes() {
   const octaveCount = useAtomValue(octaveCountAtom);
   const startNote = useAtomValue(startNoteAtom);
+  const practiceType = useAtomValue(practiceTypeAtom);
 
   return useMemo(() => {
     const chromaticData: {
@@ -20,7 +21,7 @@ export function useGenerateNotes() {
       octaves: [],
     };
 
-    if (!octaveCount || !startNote) {
+    if (typeof octaveCount !== 'number' || !startNote || !practiceType) {
       return chromaticData;
     }
 
@@ -30,9 +31,38 @@ export function useGenerateNotes() {
       return chromaticData;
     }
 
-    for (let o = startNote.oct; o < startNote.oct + octaveCount; o++) {
-      const octaveNotes = Scale.get([baseNote.name, 'chromatic']).notes.map(
-        (scaleNote) => {
+    for (
+      let o = startNote.oct;
+      o < startNote.oct + (octaveCount === 0 ? 1 : octaveCount);
+      o++
+    ) {
+      const baseNotes = Scale.get([baseNote.name, 'chromatic']);
+
+      const octaveNotes = baseNotes.notes.map((scaleNote) => {
+        if (scaleNote.includes('b')) {
+          const parsedNote = note(scaleNote);
+
+          if (parsedNote && parsedNote.freq) {
+            return fromFreqSharps(parsedNote.freq);
+          } else {
+            return scaleNote;
+          }
+        } else {
+          return scaleNote;
+        }
+      });
+
+      const allNotes = baseNotes.notes
+        .filter((scaleNote) => {
+          if (practiceType === 'all_keys') {
+            return true;
+          } else if (practiceType === 'only_natural') {
+            return !scaleNote.includes('b');
+          } else if (practiceType === 'only_sharps') {
+            return scaleNote.includes('b');
+          }
+        })
+        .map((scaleNote) => {
           if (scaleNote.includes('b')) {
             const parsedNote = note(scaleNote);
 
@@ -44,14 +74,14 @@ export function useGenerateNotes() {
           } else {
             return scaleNote;
           }
-        }
-      );
-      chromaticData.notes = [...chromaticData.notes, ...octaveNotes];
+        });
+
+      chromaticData.notes = [...chromaticData.notes, ...allNotes];
       chromaticData.octaves.push(octaveNotes);
 
       baseNote = note(baseNote.pc + (o + 1));
     }
 
     return chromaticData;
-  }, [octaveCount, startNote]);
+  }, [octaveCount, practiceType, startNote]);
 }

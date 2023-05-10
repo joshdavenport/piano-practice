@@ -7,9 +7,10 @@ import { gameStateAtom } from '@/lib/atoms';
 
 type OctaveProps = {
   notes: string[];
+  hideNumber: boolean;
 };
 
-export function Octave({ notes }: OctaveProps) {
+export function Octave({ notes, hideNumber }: OctaveProps) {
   const noteControls = useTwelveTetAnimationControls();
   const noteHighlightControls = useTwelveTetAnimationControls();
   const noteLabelControls = useTwelveTetAnimationControls();
@@ -124,7 +125,7 @@ export function Octave({ notes }: OctaveProps) {
             isSharp && 'h-20 w-20 text-2xl',
           ])}
         >
-          {note}
+          {hideNumber ? note.replace(/\d+/, '') : note}
         </motion.div>
       </motion.div>
     );
